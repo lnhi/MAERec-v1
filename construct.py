@@ -29,7 +29,7 @@ if __name__ == '__main__':
     prefix = './datasets/' + dataset + '/'
 
     # distance  = int(input('Max distance of edge: '))
-    distance = args.ii_dis
+    distance = 3
 
     with open(prefix + 'seq', 'rb') as fs:
         seqs = pickle.load(fs)
