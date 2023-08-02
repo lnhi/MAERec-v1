@@ -25,7 +25,7 @@ def construct_graphs(seq, num_items, distance, prefix):
 if __name__ == '__main__':
 
     # dataset = input('Choose a dataset: ')
-    dataset = args.data
+    dataset = ('clothings')
     prefix = './datasets/' + dataset + '/'
 
     # distance  = int(input('Max distance of edge: '))
@@ -33,14 +33,6 @@ if __name__ == '__main__':
 
     with open(prefix + 'seq', 'rb') as fs:
         seqs = pickle.load(fs)
-
-    if dataset == ('books'):
-        num_items = 54756
-    elif dataset == ('toys'):
-        num_items = 54784
-    elif dataset == ('retailrocket'):
-        num_items = 43886
-    elif dataset == ('clothings'):
-        num_items = 23033
+    num_items = 23033
 
     construct_graphs(seqs, num_items, distance, prefix)
