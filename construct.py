@@ -40,5 +40,7 @@ if __name__ == '__main__':
         num_items = 54784
     elif dataset == ('retailrocket'):
         num_items = 43886
+    elif dataset == ('clothings'):
+        num_items = 23033
 
     construct_graphs(seqs, num_items, distance, prefix)
