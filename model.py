@@ -1,4 +1,5 @@
 import torch.nn.functional as F
+import pickle
 from statistics import mean
 from params import args
 from torch import nn
@@ -18,7 +19,8 @@ class Item_Graph(nn.Module):
         self.device = 'cuda' if t.cuda.is_available() else 'cpu'
         self.dataset = dataset
         #dataset_path = os.path.abspath(config['data_path'] + config['dataset'])
-        self.t_feat = t.from_numpy(np.load("text_feat-v1.npy", allow_pickle=True)).type(t.FloatTensor).to(self.device)
+        with open('text', 'rb') as fs:
+            self.t_feat =  pickle.load(fs).to(self.device)
         self.text_embedding = nn.Embedding.from_pretrained(self.t_feat, freeze=False)
 
         self.gcn_layers = nn.Sequential(*[GCNLayer() for i in range(args.num_gcn_layers)])
@@ -162,7 +164,7 @@ class SASRec(nn.Module):
         self.LayerNorm = nn.LayerNorm(args.latdim)
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
         self.apply(self.init_weights)
-        self.item_rep = Item_Graph(dataset='books')
+        self.item_rep = Item_Graph(dataset='toys')
         self.item_emb = self.item_rep().cuda()
     
     def get_seq_emb(self, sequence, item_emb):
