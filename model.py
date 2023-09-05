@@ -31,8 +31,7 @@ class Item_Graph(nn.Module):
         h = self.t_feat
         for i in self.gcn_layers:
             h = t.sparse.mm(self.mm_adj, h)
-        item_rep = self.mm_adj + h
-        return item_rep
+        return h
 
     def get_knn_adj_mat(self, mm_embedding):
         context_norm = mm_embedding.div(t.norm(mm_embedding, p=2, dim=-1, keepdim=True))
