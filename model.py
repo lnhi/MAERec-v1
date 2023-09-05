@@ -28,7 +28,7 @@ class Item_Graph(nn.Module):
         self.mm_adj = text_adj
 
     def forward(self):
-        h = self.mm_adj
+        h = self.t_feat
         for i in self.gcn_layers:
             h = t.sparse.mm(self.mm_adj, h)
         item_rep = self.mm_adj + h
