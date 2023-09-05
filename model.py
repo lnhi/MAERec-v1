@@ -68,7 +68,7 @@ class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
         self.item_rep = Item_Graph(dataset='books')
-        self.item_emb = nn.Parameter(init(t.empty(args.item, args.latdim))) + self.item_rep()
+        self.item_emb = self.item_rep().cuda()
         self.gcn_layers = nn.Sequential(*[GCNLayer() for i in range(args.num_gcn_layers)])
 
     def get_ego_embeds(self):
