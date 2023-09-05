@@ -68,7 +68,7 @@ def sparse_dropout(x, keep_prob):
 class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
-        self.item_emb = nn.Parameter(init(t.empty(args.item, args.item))) # args.item = num_real_item + 1
+        self.item_emb = nn.Parameter(init(t.empty(args.item, args.latdim))) # args.item = num_real_item + 1
         self.gcn_layers = nn.Sequential(*[GCNLayer() for i in range(args.num_gcn_layers)])
 
     def get_ego_embeds(self):
