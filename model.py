@@ -67,7 +67,8 @@ def sparse_dropout(x, keep_prob):
 class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
-        self.item_emb = nn.Parameter(init(t.empty(args.item, args.latdim))) # args.item = num_real_item + 1
+        self.item_rep = Item_Graph(dataset='books')
+        self.item_emb = self.item_rep()
         self.gcn_layers = nn.Sequential(*[GCNLayer() for i in range(args.num_gcn_layers)])
 
     def get_ego_embeds(self):
@@ -162,13 +163,12 @@ class SASRec(nn.Module):
         self.LayerNorm = nn.LayerNorm(args.latdim)
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
         self.apply(self.init_weights)
-        self.item_rep = Item_Graph(dataset='books')
     
     def get_seq_emb(self, sequence, item_emb):
         seq_len = sequence.size(1)
         pos_ids = t.arange(seq_len, dtype=t.long, device=sequence.device)
         pos_ids = pos_ids.unsqueeze(0).expand_as(sequence)
-        itm_emb = t.cat(item_emb[sequence], self.item_rep[sequence], dim = -1)
+        itm_emb = item_emb[sequence]
         pos_emb = self.pos_emb[pos_ids]
         seq_emb = itm_emb + pos_emb
         seq_emb = self.LayerNorm(seq_emb)
