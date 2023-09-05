@@ -10,6 +10,55 @@ import time
 init = nn.init.xavier_uniform_
 uniform_init = nn.init.uniform
 
+class Item_Graph(nn.Module):
+    def __init__(self, dataset):
+        super(Item_Graph, self).__init__()
+        self.knn_k = 5
+        self.k = 40
+        self.device = 'cuda' if t.cuda.is_available() else 'cpu'
+        self.dataset = dataset
+        #dataset_path = os.path.abspath(config['data_path'] + config['dataset'])
+        self.t_feat = t.from_numpy(np.load("text_feat-v1.npy", allow_pickle=True)).type(t.FloatTensor).to(self.device)
+        self.text_embedding = nn.Embedding.from_pretrained(self.t_feat, freeze=False)
+
+        self.gcn_layers = nn.Sequential(*[GCNLayer() for i in range(args.num_gcn_layers)])
+
+        indices, text_adj = self.get_knn_adj_mat(self.text_embedding.weight.detach())
+        
+        self.mm_adj = text_adj
+
+    def forward(self):
+        h = self.mm_adj
+        for i in self.gcn_layers:
+            h = t.sparse.mm(self.mm_adj, h)
+        item_rep = self.mm_adj + h
+        return item_rep
+
+    def get_knn_adj_mat(self, mm_embedding):
+        context_norm = mm_embedding.div(t.norm(mm_embedding, p=2, dim=-1, keepdim=True))
+        sim = t.mm(context_norm, context_norm.transpose(1, 0))
+        #k = 5
+        _, knn_ind = t.topk(sim, self.knn_k, dim=-1)
+        adj_size = sim.size()
+        del sim
+        # construct sparse adj
+        indices0 = t.arange(knn_ind.shape[0]).to(self.device)
+        indices0 = t.unsqueeze(indices0, 1)
+        indices0 = indices0.expand(-1, self.knn_k)
+        indices = t.stack((t.flatten(indices0), t.flatten(knn_ind)), 0)
+        # norm
+        return indices, self.compute_normalized_laplacian(indices, adj_size)
+    
+    def compute_normalized_laplacian(self, indices, adj_size):
+        adj = t.sparse.FloatTensor(indices, t.ones_like(indices[0]), adj_size)
+        row_sum = 1e-7 + t.sparse.sum(adj, -1).to_dense()
+        r_inv_sqrt = t.pow(row_sum, -0.5)
+        rows_inv_sqrt = r_inv_sqrt[indices[0]]
+        cols_inv_sqrt = r_inv_sqrt[indices[1]]
+        values = rows_inv_sqrt * cols_inv_sqrt
+        return t.sparse.FloatTensor(indices, values, adj_size)
+    
+    
 def sparse_dropout(x, keep_prob):
     msk = (t.rand(x._values().size()) + keep_prob).floor().type(t.bool)
     idx = x._indices()[:, msk]
@@ -19,7 +68,7 @@ def sparse_dropout(x, keep_prob):
 class Encoder(nn.Module):
     def __init__(self):
         super(Encoder, self).__init__()
-        self.item_emb = nn.Parameter(init(t.empty(args.item, args.latdim))) # args.item = num_real_item + 1
+        self.item_emb = nn.Parameter(init(t.empty(args.item, args.item))) # args.item = num_real_item + 1
         self.gcn_layers = nn.Sequential(*[GCNLayer() for i in range(args.num_gcn_layers)])
 
     def get_ego_embeds(self):
@@ -114,12 +163,13 @@ class SASRec(nn.Module):
         self.LayerNorm = nn.LayerNorm(args.latdim)
         self.dropout = nn.Dropout(args.hidden_dropout_prob)
         self.apply(self.init_weights)
-
+        self.item_rep = Item_Graph(dataset='books')
+    
     def get_seq_emb(self, sequence, item_emb):
         seq_len = sequence.size(1)
         pos_ids = t.arange(seq_len, dtype=t.long, device=sequence.device)
         pos_ids = pos_ids.unsqueeze(0).expand_as(sequence)
-        itm_emb = item_emb[sequence]
+        itm_emb = item_emb[sequence] + self.item_rep()
         pos_emb = self.pos_emb[pos_ids]
         seq_emb = itm_emb + pos_emb
         seq_emb = self.LayerNorm(seq_emb)
