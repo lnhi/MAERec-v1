@@ -168,7 +168,7 @@ class SASRec(nn.Module):
         seq_len = sequence.size(1)
         pos_ids = t.arange(seq_len, dtype=t.long, device=sequence.device)
         pos_ids = pos_ids.unsqueeze(0).expand_as(sequence)
-        itm_emb = item_emb[sequence] + self.item_rep()
+        itm_emb = item_emb[sequence] + self.item_rep[sequence]
         pos_emb = self.pos_emb[pos_ids]
         seq_emb = itm_emb + pos_emb
         seq_emb = self.LayerNorm(seq_emb)
