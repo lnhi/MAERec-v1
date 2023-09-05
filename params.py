@@ -14,7 +14,7 @@ def ParseArgs():
     parser.add_argument('--num_reco_neg', default=40, type=int, help='number of negative items for reconstruction task')
     parser.add_argument('--reg', default=1e-6, type=float, help='weight decay regularizer')
     parser.add_argument('--ssl_reg', default=1e-2, type=float, help='contrastive regularizer')
-    parser.add_argument('--latdim', default=7050, type=int, help='embedding size')
+    parser.add_argument('--latdim', default=32, type=int, help='embedding size')
     parser.add_argument('--mask_depth', default=3, type=int, help='k steps for generating transitional path')
     parser.add_argument('--path_prob', default=0.5, type=float, help='random walk sample probability')
     parser.add_argument('--num_attention_heads', default=4, type=int, help='number of heads in attention')
