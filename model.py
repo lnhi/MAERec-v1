@@ -19,7 +19,7 @@ class Item_Graph(nn.Module):
         self.device = 'cuda' if t.cuda.is_available() else 'cpu'
         self.dataset = dataset
         #dataset_path = os.path.abspath(config['data_path'] + config['dataset'])
-        self.t_feat = t.from_numpy(np.load('text_feat-v1', allow_pickle=True)).type(t.FloatTensor).to(self.device)
+        self.t_feat = t.from_numpy(np.load('text_feat-v1.npy', allow_pickle=True)).type(t.FloatTensor).to(self.device)
         #with open('text', 'rb') as fs:
         #    self.t_feat =  pickle.load(fs).to(self.device)
         self.text_embedding = nn.Embedding.from_pretrained(self.t_feat, freeze=False)
